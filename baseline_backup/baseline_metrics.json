@@ -1,0 +1,56 @@
+{
+  "model": "best.pt",
+  "checkpoint_hash": "dcf3dc1ccf34c08a1eb672ce4074f442",
+  "evaluation_dataset": "Data/final_data/test/images",
+  "num_test_images": 30,
+  "overall": {
+    "precision": 0.996,
+    "recall": 0.0333,
+    "mAP50": 0.055,
+    "mAP50_95": 0.0275
+  },
+  "per_class": {
+    "Hello": {
+      "instances": 5,
+      "precision": 0.973,
+      "recall": 0.2,
+      "mAP50": 0.33,
+      "mAP50_95": 0.165
+    },
+    "IloveYou": {
+      "instances": 5,
+      "precision": 1.0,
+      "recall": 0.0,
+      "mAP50": 0.0,
+      "mAP50_95": 0.0
+    },
+    "No": {
+      "instances": 5,
+      "precision": 1.0,
+      "recall": 0.0,
+      "mAP50": 0.0,
+      "mAP50_95": 0.0
+    },
+    "Please": {
+      "instances": 5,
+      "precision": 1.0,
+      "recall": 0.0,
+      "mAP50": 0.0,
+      "mAP50_95": 0.0
+    },
+    "Thanks": {
+      "instances": 5,
+      "precision": 1.0,
+      "recall": 0.0,
+      "mAP50": 0.0,
+      "mAP50_95": 0.0
+    },
+    "Yes": {
+      "instances": 5,
+      "precision": 1.0,
+      "recall": 0.0,
+      "mAP50": 0.0,
+      "mAP50_95": 0.0
+    }
+  }
+}

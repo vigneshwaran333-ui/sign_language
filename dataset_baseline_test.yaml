@@ -1,0 +1,8 @@
+# Frozen Baseline Test Set (30 original images)
+path: C:/zsign-detection/Data/merged_data
+train: images/train
+val: images/test
+test: images/test
+
+nc: 16
+names: ['Hello', 'IloveYou', 'No', 'Please', 'Thanks', 'Yes', 'Bad', 'Food', 'Friend', 'Good', 'Help', 'Pain', 'Stop', 'Water', 'Welcome', 'Where']

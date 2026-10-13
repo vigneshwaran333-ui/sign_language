@@ -1,0 +1,8 @@
+# New Data Validation Slice (125 new images)
+path: C:/zsign-detection/Data/merged_data
+train: images/train
+val: images/val_new_only
+test: images/val_new_only
+
+nc: 16
+names: ['Hello', 'IloveYou', 'No', 'Please', 'Thanks', 'Yes', 'Bad', 'Food', 'Friend', 'Good', 'Help', 'Pain', 'Stop', 'Water', 'Welcome', 'Where']
