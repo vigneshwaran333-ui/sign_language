@@ -8,9 +8,17 @@ import os
 import sys
 import time
 import logging
+import platform
+import pathlib
 from pathlib import Path
 import numpy as np
 import cv2
+
+# Cross-platform pathlib compatibility (fixes 'cannot instantiate WindowsPath on your system' on Linux/Render)
+if platform.system() != "Windows":
+    pathlib.WindowsPath = pathlib.PosixPath
+else:
+    pathlib.PosixPath = pathlib.WindowsPath
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")

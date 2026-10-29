@@ -9,7 +9,16 @@ import sys
 import time
 import base64
 import logging
+import platform
+import pathlib
 from pathlib import Path
+
+# Cross-platform pathlib compatibility (fixes 'cannot instantiate WindowsPath on your system' on Linux/Render)
+if platform.system() != "Windows":
+    pathlib.WindowsPath = pathlib.PosixPath
+else:
+    pathlib.PosixPath = pathlib.WindowsPath
+
 import cv2
 import numpy as np
 from flask import Flask, render_template, request, jsonify, Response
