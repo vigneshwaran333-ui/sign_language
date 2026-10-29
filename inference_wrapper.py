@@ -30,6 +30,14 @@ if str(YOLOV5_DIR) not in sys.path:
 
 try:
     import torch
+    # PyTorch 2.6+ safety patch: allow unpickling YOLOv5 model weights
+    _orig_torch_load = torch.load
+    def _safe_torch_load(*args, **kwargs):
+        if "weights_only" not in kwargs:
+            kwargs["weights_only"] = False
+        return _orig_torch_load(*args, **kwargs)
+    torch.load = _safe_torch_load
+
     from models.common import DetectMultiBackend
     from utils.general import non_max_suppression, scale_boxes, check_img_size
     from utils.augmentations import letterbox

@@ -133,10 +133,13 @@ def api_sample():
     Runs inference on an existing sample image from the z-sign dataset,
     allowing the user to verify the model immediately without a physical camera.
     """
+    sample_static = CURRENT_DIR / "static" / "sample_sign.jpg"
     sample_dir = DEFAULT_ZSIGN_ROOT / "Data" / "final_data" / "test" / "images"
     sample_img_path = None
 
-    if sample_dir.exists():
+    if sample_static.exists():
+        sample_img_path = sample_static
+    elif sample_dir.exists():
         for candidate in sample_dir.glob("*.jpg"):
             sample_img_path = candidate
             break
