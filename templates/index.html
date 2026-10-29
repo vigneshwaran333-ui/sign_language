@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Z-Sign | Real-Time Sign Language Recognition</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Google Fonts for modern tech typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Main Application Container -->
+    <div class="app-container">
+        <!-- Top Navigation Header -->
+        <header class="app-header">
+            <div class="header-brand">
+                <div class="brand-logo">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"></path>
+                        <path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"></path>
+                        <path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"></path>
+                        <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"></path>
+                    </svg>
+                </div>
+                <div class="brand-title">
+                    <h1>Z-Sign <span>Live</span></h1>
+                    <span class="brand-subtitle">Indian Sign Language AI Detection</span>
+                </div>
+            </div>
+
+            <div class="header-controls">
+                <!-- Voice Feedback Toggle -->
+                <button id="ttsToggleBtn" class="control-btn" title="Toggle Voice Output (Text-to-Speech)">
+                    <span class="btn-icon">🔊</span>
+                    <span class="btn-text">Voice: OFF</span>
+                </button>
+
+                <!-- Light / Dark Theme Switcher -->
+                <button id="themeToggleBtn" class="control-btn" title="Toggle Light/Dark Theme">
+                    <span class="theme-icon">🌙</span>
+                    <span class="btn-text">Dark</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Notification Banner / Alert Box -->
+        <div id="alertBanner" class="alert-banner hidden">
+            <div class="alert-icon">⚠️</div>
+            <div class="alert-content">
+                <strong id="alertTitle">Notice</strong>
+                <p id="alertMessage">Message details will appear here.</p>
+            </div>
+            <button id="alertCloseBtn" class="alert-close" aria-label="Close notification">&times;</button>
+        </div>
+
+        <!-- Main Responsive 2-Column Grid -->
+        <main class="main-layout">
+            <!-- Left Column: Video Feed & Camera Controls -->
+            <section class="video-panel-wrapper">
+                <div class="card video-card">
+                    <div class="card-header">
+                        <div class="panel-heading">
+                            <h2>Live Camera Feed</h2>
+                            <span class="badge" id="sourceBadge">Browser WebRTC</span>
+                        </div>
+                        <div class="header-actions">
+                            <button id="sampleTestBtn" class="action-btn secondary-btn" title="Run test on sample image from dataset">
+                                🧪 Test Sample Sign
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Video Viewport & Canvas Overlay -->
+                    <div class="viewport-container" id="viewportContainer">
+                        <video id="webcamVideo" autoplay playsinline muted></video>
+                        <canvas id="overlayCanvas"></canvas>
+                        
+                        <!-- MJPEG stream image for Server OpenCV mode -->
+                        <img id="serverStreamImg" class="server-stream hidden" alt="Server Video Stream">
+
+                        <!-- Standby / Inactive Overlay -->
+                        <div id="standbyOverlay" class="standby-overlay" style="cursor: pointer;" title="Click anywhere to start camera">
+                            <div class="standby-content">
+                                <div class="standby-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M23 7l-7 5 7 5V7z"></path>
+                                        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                                    </svg>
+                                </div>
+                                <h3>Starting Camera...</h3>
+                                <p>Click anywhere or click <strong>Start Camera</strong> below to enable live sign detection.</p>
+                                <button type="button" class="primary-btn" style="margin-top: 14px; pointer-events: none;">
+                                    <span class="btn-icon">▶</span>
+                                    <span>Start Live Camera</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Processing Spinner Reticle -->
+                        <div id="detectionIndicator" class="detection-indicator hidden">
+                            <span class="pulse-dot"></span>
+                            <span>DETECTING</span>
+                        </div>
+                    </div>
+
+                    <!-- Camera Control Toolbar -->
+                    <div class="toolbar">
+                        <div class="toolbar-group">
+                            <!-- Camera Selector Dropdown -->
+                            <div class="select-wrapper">
+                                <label for="cameraSelect">Camera Source:</label>
+                                <select id="cameraSelect" aria-label="Select Camera Device">
+                                    <option value="" disabled selected>Searching cameras...</option>
+                                </select>
+                            </div>
+
+                            <!-- Backend / Browser Mode Toggle -->
+                            <div class="select-wrapper">
+                                <label for="captureModeSelect">Capture Mode:</label>
+                                <select id="captureModeSelect">
+                                    <option value="browser" selected>Browser Camera (Client-side)</option>
+                                    <option value="server">Server OpenCV (Backend)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="toolbar-actions">
+                            <button id="startCamBtn" class="primary-btn">
+                                <span class="btn-icon">▶</span>
+                                <span>Start Camera</span>
+                            </button>
+                            <button id="stopCamBtn" class="danger-btn hidden">
+                                <span class="btn-icon">⏹</span>
+                                <span>Stop Camera</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Sliders & Options Bar -->
+                    <div class="tuning-bar">
+                        <div class="slider-group">
+                            <div class="slider-label">
+                                <span>Confidence Threshold:</span>
+                                <strong id="confValue">70%</strong>
+                            </div>
+                            <input type="range" id="confSlider" min="20" max="95" value="70" step="1">
+                        </div>
+
+                        <div class="tuning-info">
+                            <small>Z-Sign standard threshold: <strong>80%</strong> (High-accuracy gesture suppression)</small>
+                        </div>
+                    </div>
+
+                    <!-- Real-Time Metrics & Status Footer -->
+                    <div class="status-bar">
+                        <div class="status-item" id="camStatusItem">
+                            <span class="status-dot red" id="camDot"></span>
+                            <span id="camStatusText">Camera: OFF</span>
+                        </div>
+
+                        <div class="status-item" id="modelStatusItem">
+                            <span class="status-dot yellow" id="modelDot"></span>
+                            <span id="modelStatusText">Model: Checking...</span>
+                        </div>
+
+                        <div class="status-item">
+                            <span class="metric-label">FPS:</span>
+                            <strong class="metric-value" id="fpsMetric">0.0</strong>
+                        </div>
+
+                        <div class="status-item">
+                            <span class="metric-label">Latency:</span>
+                            <strong class="metric-value" id="latencyMetric">0 ms</strong>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Column: Current Detections & History Panel -->
+            <section class="detections-panel-wrapper">
+                <!-- Top Card: Current Real-time Detection -->
+                <div class="card current-detection-card">
+                    <div class="card-header">
+                        <h2>Current Sign</h2>
+                        <span class="badge active-badge" id="activeCountBadge">0 Detected</span>
+                    </div>
+
+                    <div class="current-detection-content" id="currentDetectionContent">
+                        <!-- Empty placeholder state -->
+                        <div class="empty-state" id="emptyDetectionState">
+                            <div class="empty-icon">✋</div>
+                            <p class="empty-title">No Sign Detected</p>
+                            <small>Show one of the 16 trained gestures clearly in front of the camera.</small>
+                        </div>
+
+                        <!-- Active Detection Display (dynamically populated) -->
+                        <div class="active-detection-view hidden" id="activeDetectionView">
+                            <div class="sign-primary">
+                                <div class="sign-name-wrapper">
+                                    <h3 id="currentSignLabel">Hello</h3>
+                                    <span class="sign-badge" id="currentSignClassId">Class #0</span>
+                                </div>
+                                <div class="confidence-circle" id="currentConfCircle">
+                                    <span id="currentConfPct">94.5%</span>
+                                    <small>CONF</small>
+                                </div>
+                            </div>
+
+                            <div class="confidence-bar-container">
+                                <div class="confidence-bar-track">
+                                    <div class="confidence-bar-fill" id="confBarFill" style="width: 94.5%;"></div>
+                                </div>
+                            </div>
+
+                            <div class="detection-meta">
+                                <div class="meta-item">
+                                    <span class="meta-label">Timestamp:</span>
+                                    <span class="meta-val" id="currentTimestamp">--:--:--</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">BBox (px):</span>
+                                    <span class="meta-val" id="currentBBox">--</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Card: History / Log of Recent Detections -->
+                <div class="card history-card">
+                    <div class="card-header">
+                        <div class="panel-heading">
+                            <h2>Detection History</h2>
+                            <span class="counter" id="historyCounter">(0 items)</span>
+                        </div>
+                        <button id="clearHistoryBtn" class="clear-btn" title="Clear history log">
+                            🗑️ Clear
+                        </button>
+                    </div>
+
+                    <div class="history-list-wrapper">
+                        <div class="empty-history" id="emptyHistoryState">
+                            <span>No detections logged yet.</span>
+                        </div>
+                        <ul class="history-list" id="historyList"></ul>
+                    </div>
+                </div>
+
+                <!-- Reference Accordion: Supported Classes -->
+                <div class="card reference-card">
+                    <details>
+                        <summary>
+                            <strong>16 Supported Sign Classes (Dataset Reference)</strong>
+                            <span class="chevron">▼</span>
+                        </summary>
+                        <div class="class-tags-grid" id="classTagsGrid">
+                            <!-- Populated dynamically via JS or server -->
+                            <span class="class-pill">Hello</span>
+                            <span class="class-pill">IloveYou</span>
+                            <span class="class-pill">No</span>
+                            <span class="class-pill">Please</span>
+                            <span class="class-pill">Thanks</span>
+                            <span class="class-pill">Yes</span>
+                            <span class="class-pill">Bad</span>
+                            <span class="class-pill">Food</span>
+                            <span class="class-pill">Friend</span>
+                            <span class="class-pill">Good</span>
+                            <span class="class-pill">Help</span>
+                            <span class="class-pill">Pain</span>
+                            <span class="class-pill">Stop</span>
+                            <span class="class-pill">Water</span>
+                            <span class="class-pill">Welcome</span>
+                            <span class="class-pill">Where</span>
+                        </div>
+                    </details>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Hidden canvas for capturing video frames to send to backend -->
+    <canvas id="captureCanvas" style="display: none;"></canvas>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

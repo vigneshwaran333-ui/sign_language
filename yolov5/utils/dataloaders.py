@@ -399,7 +399,12 @@ class LoadStreams:
             if s == 0:
                 assert not is_colab(), "--source 0 webcam unsupported on Colab. Rerun command in a local environment."
                 assert not is_kaggle(), "--source 0 webcam unsupported on Kaggle. Rerun command in a local environment."
-            cap = cv2.VideoCapture(s)
+            if isinstance(s, int) and os.name == "nt":
+                cap = cv2.VideoCapture(s, cv2.CAP_DSHOW)
+                if not cap.isOpened():
+                    cap = cv2.VideoCapture(s)
+            else:
+                cap = cv2.VideoCapture(s)
             assert cap.isOpened(), f"{st}Failed to open {s}"
             w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
             h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -407,7 +412,16 @@ class LoadStreams:
             self.frames[i] = max(int(cap.get(cv2.CAP_PROP_FRAME_COUNT)), 0) or float("inf")  # infinite stream fallback
             self.fps[i] = max((fps if math.isfinite(fps) else 0) % 100, 0) or 30  # 30 FPS fallback
 
-            _, self.imgs[i] = cap.read()  # guarantee first frame
+            # Allow camera warmup to guarantee valid initial frame
+            self.imgs[i] = None
+            for _ in range(15):
+                success, frame = cap.read()
+                if success and frame is not None:
+                    self.imgs[i] = frame
+                    break
+                time.sleep(0.05)
+            if self.imgs[i] is None:
+                raise RuntimeError(f"Could not read initial frame from camera source {s}. Please ensure the camera is connected and not in use by another application.")
             self.threads[i] = Thread(target=self.update, args=([i, cap, s]), daemon=True)
             LOGGER.info(f"{st} Success ({self.frames[i]} frames {w}x{h} at {self.fps[i]:.2f} FPS)")
             self.threads[i].start()

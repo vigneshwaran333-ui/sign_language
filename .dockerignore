@@ -1,0 +1,17 @@
+env/
+.venv/
+venv/
+runs/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.git/
+.gitignore
+.dockerignore
+Data/
+sample_data/
+*.zip
+*.tar.gz
+*.bat
+*.ps1

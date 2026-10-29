@@ -1,8 +1,0 @@
-# Merged Dataset Configuration (16 Sign Language Classes)
-path: C:/zsign-detection/Data/merged_data
-train: images/train
-val: images/val
-test: images/test
-
-nc: 16
-names: ['Hello', 'IloveYou', 'No', 'Please', 'Thanks', 'Yes', 'Bad', 'Food', 'Friend', 'Good', 'Help', 'Pain', 'Stop', 'Water', 'Welcome', 'Where']

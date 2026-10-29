@@ -14,16 +14,37 @@ if not VENV_PYTHON.exists():
     VENV_PYTHON = ROOT.parent / "env" / "Scripts" / "python.exe"
 py_exec = str(VENV_PYTHON) if VENV_PYTHON.exists() else sys.executable
 
+# Parse and normalize CLI arguments
+args = list(sys.argv[1:])
+
+# Convert relative file paths to absolute before changing directory
+new_args = []
+i = 0
+while i < len(args):
+    arg = args[i]
+    if arg in ("--source", "-s", "--weights", "-w", "--data", "--project") and i + 1 < len(args):
+        val = args[i + 1]
+        p = Path(val)
+        if not val.isnumeric() and not val.startswith(("http://", "https://", "rtsp://", "rtmp://", "screen")):
+            abs_p = (Path.cwd() / p).resolve()
+            if abs_p.exists():
+                val = str(abs_p)
+        new_args.extend([arg, val])
+        i += 2
+    else:
+        new_args.append(arg)
+        i += 1
+args = new_args
+
 os.chdir(YOLOV5_DIR)
 
-args = list(sys.argv[1:])
 if not any(arg in args for arg in ("--weights", "-w")):
-    args = ["--weights", str(WEIGHTS)] + args
+    args = ["--weights", str(WEIGHTS.resolve())] + args
 
 if not any(arg in args for arg in ("--img", "--img-size", "--imgsz")):
     args += ["--img", "416"]
 
-# Use a confidence threshold (0.80) to suppress general background noise
+# Use the original high-accuracy confidence threshold (0.80) to suppress all background noise
 # Genuine gestures typically score 0.90+
 if not any(arg in args for arg in ("--conf", "--conf-thres")):
     args += ["--conf", "0.80"]
@@ -32,7 +53,7 @@ if not any(arg in args for arg in ("--conf", "--conf-thres")):
 if not any(arg in args for arg in ("--iloveyou-conf",)):
     args += ["--iloveyou-conf", "0.88"]
 
-# Slightly reduced font size and bounding box thickness for clean display
+# Reduced font size and bounding box thickness for clean display
 if not any(arg in args for arg in ("--font-scale",)):
     args += ["--font-scale", "0.55"]
 
