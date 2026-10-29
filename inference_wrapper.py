@@ -91,12 +91,13 @@ class ZSignDetector:
 
         try:
             logger.info(f"Loading z-sign model from: {self.weights_path}")
+            torch.set_num_threads(1)  # Restrict threads to keep memory low on free cloud tiers
             self.device = select_device(self.device_str)
             
-            # Use dataset yaml if present, else fallback
+            # Use dataset yaml if present, else None (DetectMultiBackend extracts names from weights)
             data_yaml = DEFAULT_ZSIGN_ROOT / "dataset_merged.yaml"
             if not data_yaml.exists():
-                data_yaml = YOLOV5_DIR / "data" / "coco128.yaml"
+                data_yaml = None
 
             self.model = DetectMultiBackend(
                 self.weights_path,
